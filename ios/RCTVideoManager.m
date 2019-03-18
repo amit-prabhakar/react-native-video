@@ -8,7 +8,7 @@
 RCT_EXPORT_MODULE();
 
 @synthesize bridge = _bridge;
-
+ 
 - (UIView *)view
 {
   return [[RCTVideo alloc] initWithEventDispatcher:self.bridge.eventDispatcher];
@@ -42,6 +42,7 @@ RCT_EXPORT_VIEW_PROPERTY(progressUpdateInterval, float);
 RCT_EXPORT_VIEW_PROPERTY(onVideoLoadStart, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoLoad, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoBuffer, RCTBubblingEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(bufferConfig, NSDictionary);
 RCT_EXPORT_VIEW_PROPERTY(onVideoError, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoProgress, RCTBubblingEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoSeek, RCTBubblingEventBlock);
