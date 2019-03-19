@@ -41,6 +41,11 @@ static int const RCTVideoUnset = -1;
   BOOL _controls;
   id _timeObserver;
 
+  /* For keeping track of buffer states */
+  BOOL _playbackStarted;
+  BOOL _seeked;
+  Float64 _previousTime;
+
   /* Keep track of any modifiers, need to be applied after each play */
   float _volume;
   float _rate;
@@ -53,9 +58,6 @@ static int const RCTVideoUnset = -1;
   NSDictionary * _selectedAudioTrack;
   NSDictionary * _bufferConfig;
   BOOL _playbackStalled;
-  BOOL _playbackStarted;
-  BOOL _seeked;
-  Float64 _previousTime;
   BOOL _playInBackground;
   BOOL _playWhenInactive;
   NSString * _ignoreSilentSwitch;
@@ -86,6 +88,9 @@ static int const RCTVideoUnset = -1;
     _playInBackground = false;
     _allowsExternalPlayback = YES;
     _playWhenInactive = false;
+    _playbackStarted = NO;
+    _seeked = NO;
+    _previousTime = 0.0;
     _ignoreSilentSwitch = @"inherit"; // inherit, ignore, obey
 
     [[NSNotificationCenter defaultCenter] addObserver:self
@@ -237,7 +242,7 @@ static int const RCTVideoUnset = -1;
 
    [[NSNotificationCenter defaultCenter] postNotificationName:@"RCTVideo_progress" object:nil userInfo:@{@"progress": [NSNumber numberWithDouble: currentTimeSecs / duration]}];
 
-  if( currentTimeSecs >= 0) {
+if( currentTimeSecs >= 0) {
     _playbackStarted = YES;
     if (self.onVideoProgress) {
       self.onVideoProgress(@{
@@ -553,10 +558,7 @@ static int const RCTVideoUnset = -1;
       _playerBufferEmpty = NO;
       self.onVideoBuffer(@{@"isBuffering": @(NO), @"target": self.reactTag});
     }
-  }
-
-
-  else if ([keyPath isEqualToString:loadedTimeRangesKeyPath]) {
+    else if ([keyPath isEqualToString:loadedTimeRangesKeyPath]) {
       if (_bufferConfig) {
         double buffered = [[self calculatePlayableDuration] doubleValue] - [[NSNumber numberWithFloat:CMTimeGetSeconds(_player.currentTime)] doubleValue];
         double threshold = 0.0;
@@ -569,10 +571,11 @@ static int const RCTVideoUnset = -1;
           double bufferForPlaybackMs = [_bufferConfig[@"bufferForPlaybackMs"] doubleValue];
           threshold = bufferForPlaybackMs / 1000; // bufferForPlaybackMs
         }
-        if (threshold > 0.0 && buffered >= 5 && !_paused) {
-          [_player playImmediatelyAtRate:_rate];
+        if (threshold > 0.0 && buffered >= threshold && !_paused) {
+          [_player playImmediatelyAtRate:1];
         }
       }
+    }
   }
 
   else if (object == _playerLayer) {
